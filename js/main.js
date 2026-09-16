@@ -158,6 +158,15 @@ async function runShoot() {
 function bind() {
   $("#startBtn").addEventListener("click", () => { goFullscreen(); runShoot(); });
   $("#attract").addEventListener("click", e => { if (e.target.id === "attract") { goFullscreen(); runShoot(); } });
+  
+  // Start session with Spacebar
+  document.addEventListener("keydown", e => {
+    if (State.current === "attract" && (e.code === "Space" || e.key === " ")) {
+      e.preventDefault();
+      goFullscreen();
+      runShoot();
+    }
+  });
 
   $("#retakeBtn").addEventListener("click", runShoot);
   $("#toTplBtn").addEventListener("click", () => State.go("templates"));
