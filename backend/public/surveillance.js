@@ -30,44 +30,61 @@ bulkPrintBtn.addEventListener('click', () => {
     
     const printWindow = window.open('', '_blank');
     let imagesHtml = '';
-    selectedImages.forEach(img => {
-        imagesHtml += `
-            <div class="img-container">
-                <img src="${img}" />
-            </div>
-        `;
-    });
+    
+    // Convert Set to Array to group into pages of 6
+    const imgArray = Array.from(selectedImages);
+    for (let i = 0; i < imgArray.length; i += 6) {
+        const pageImages = imgArray.slice(i, i + 6);
+        imagesHtml += `<div class="page">`;
+        pageImages.forEach(img => {
+            imagesHtml += `
+                <div class="img-container">
+                    <img src="${img}" />
+                </div>
+            `;
+        });
+        imagesHtml += `</div>`;
+    }
     
     printWindow.document.write(`
         <html>
             <head>
                 <title>Bulk Print Photo Strips</title>
                 <style>
-                    @page { margin: 0; size: auto; }
+                    @page { 
+                        margin: 0; 
+                        size: A4 portrait; 
+                    }
+                    * { box-sizing: border-box; }
                     body { 
                         margin: 0; 
-                        display: flex; 
-                        flex-direction: column; /* Stack vertically */
-                        align-items: flex-start; /* Stack from the left */
-                        gap: 20px; 
+                        padding: 0;
                         background: #fff; 
-                        padding: 20px; 
+                    }
+                    .page {
+                        width: 210mm; /* A4 width */
+                        height: 297mm; /* A4 height */
+                        padding: 3mm; /* Minimal margins around the edge of the paper */
+                        display: grid; 
+                        grid-template-columns: repeat(3, 1fr);
+                        grid-template-rows: repeat(2, 1fr);
+                        gap: 3mm; /* Minimal spacing between strips */
+                        page-break-after: always; /* Force new page for next 6 strips */
+                        overflow: hidden;
                     }
                     .img-container {
-                        width: 95vw;
-                        max-width: 5.8in;
-                        height: 31.6vw; /* 1/3 of the width since strip is 1:3 */
-                        max-height: 1.93in;
-                        position: relative;
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        overflow: hidden;
                     }
                     .img-container img {
-                        position: absolute;
-                        height: 95vw;
-                        max-height: 5.8in;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%) rotate(-90deg); /* Rotate 90 degrees */
-                        border: 1px solid #eee; 
+                        width: 100%;
+                        height: 100%;
+                        object-fit: contain; /* Ensure the whole strip fits inside the grid cell */
+                        border: 1px dashed #ccc; 
                     }
                 </style>
             </head>

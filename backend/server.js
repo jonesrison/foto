@@ -13,6 +13,8 @@ const io = new Server(server, { cors: { origin: '*' } });
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use('/surveillance', express.static(path.join(__dirname, 'public')));
+// Serve photos folder statically so frontend can access historical images
+app.use('/photos', express.static(path.join(__dirname, 'photos')));
 
 // Ensure photos directory exists
 const photosDir = path.join(__dirname, 'photos');
@@ -21,15 +23,41 @@ if (!fs.existsSync(photosDir)) {
 }
 
 const instance = new Bonjour();
-instance.publish({ name: 'Photobooth', type: 'http', port: 3000, host: 'photobooth.local' });
+instance.publish({ name: 'Retro Booth', type: 'http', port: 3000, host: 'retrobooth.local' });
 
+// Load stats from disk if available
+const statsFile = path.join(__dirname, 'stats.json');
 let stats = { processed: 0, printed: 0, errors: 0 };
+if (fs.existsSync(statsFile)) {
+    try {
+        stats = JSON.parse(fs.readFileSync(statsFile, 'utf8'));
+    } catch(e){}
+}
+function saveStats() {
+    fs.writeFileSync(statsFile, JSON.stringify(stats));
+}
+
 let printQueue = [];
 
 io.on('connection', (socket) => {
     console.log('Surveillance client connected');
     socket.emit('stats_update', stats);
     socket.emit('queue_update', printQueue);
+    
+    // Load historical strips from disk and send them to the client
+    fs.readdir(photosDir, (err, files) => {
+        if (!err) {
+            const strips = files.filter(f => f.startsWith('photo_strip_')).sort();
+            const recent = strips.slice(-50); // Get up to 50 most recent strips
+            recent.forEach(file => {
+                socket.emit('live_event', {
+                    type: 'process',
+                    image: `/photos/${file}`,
+                    historical: true
+                });
+            });
+        }
+    });
 });
 
 // Discovery Endpoint
@@ -60,6 +88,7 @@ app.post('/process', (req, res) => {
         }
         
         stats.processed++;
+        saveStats();
         io.emit('stats_update', stats);
         io.emit('live_event', { type: 'process', image: image });
         
@@ -69,6 +98,7 @@ app.post('/process', (req, res) => {
         }, 500);
     } catch (err) {
         stats.errors++;
+        saveStats();
         io.emit('stats_update', stats);
         res.status(500).json({ error: 'Processing failed' });
     }
@@ -84,10 +114,11 @@ app.post('/print', (req, res) => {
         io.emit('queue_update', printQueue);
         io.emit('live_event', { type: 'print', image, meta });
         
-        // Simulate print job completion logic here (e.g., calling system print command or saving to a hot folder)
+        // Simulate print job completion logic
         setTimeout(() => {
             printQueue = printQueue.filter(j => j.id !== jobId);
             stats.printed++;
+            saveStats();
             io.emit('stats_update', stats);
             io.emit('queue_update', printQueue);
         }, 5000); // simulate 5 second print
@@ -95,6 +126,7 @@ app.post('/print', (req, res) => {
         res.status(200).json({ success: true, jobId });
     } catch (err) {
         stats.errors++;
+        saveStats();
         io.emit('stats_update', stats);
         res.status(500).json({ error: 'Print failed' });
     }
