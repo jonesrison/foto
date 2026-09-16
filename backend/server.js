@@ -4,7 +4,6 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
-const { exec } = require('child_process');
 const Bonjour = require('bonjour-service');
 
 const app = express();
@@ -14,6 +13,12 @@ const io = new Server(server, { cors: { origin: '*' } });
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use('/surveillance', express.static(path.join(__dirname, 'public')));
+
+// Ensure photos directory exists
+const photosDir = path.join(__dirname, 'photos');
+if (!fs.existsSync(photosDir)) {
+    fs.mkdirSync(photosDir);
+}
 
 const instance = new Bonjour();
 instance.publish({ name: 'Photobooth', type: 'http', port: 3000, host: 'photobooth.local' });
@@ -40,6 +45,14 @@ app.post('/process', (req, res) => {
         // For now, just return the image to simulate a successful processing step.
         const processedImage = image; 
         
+        // Save image to disk
+        if (processedImage) {
+            const base64Data = processedImage.replace(/^data:image\/\w+;base64,/, "");
+            const filename = `photo_${Date.now()}.jpg`;
+            const filepath = path.join(photosDir, filename);
+            fs.writeFileSync(filepath, base64Data, 'base64');
+        }
+        
         stats.processed++;
         io.emit('stats_update', stats);
         io.emit('live_event', { type: 'process', image: processedImage, template });
@@ -52,29 +65,6 @@ app.post('/process', (req, res) => {
         stats.errors++;
         io.emit('stats_update', stats);
         res.status(500).json({ error: 'Processing failed' });
-    }
-});
-
-// Manual System Print Endpoint
-app.post('/print-system', (req, res) => {
-    try {
-        const { image } = req.body;
-        if (!image) return res.status(400).json({ error: 'No image provided' });
-
-        // Strip the data URL prefix and save to disk
-        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
-        const filePath = path.join(__dirname, 'temp_print.jpg');
-        fs.writeFileSync(filePath, base64Data, 'base64');
-
-        // Execute Windows print dialog via PowerShell
-        exec(`powershell -Command "Start-Process -FilePath '${filePath}' -Verb Print"`, (err) => {
-            if (err) console.error("Print dialog error:", err);
-        });
-
-        res.json({ success: true });
-    } catch (err) {
-        console.error("System print failed:", err);
-        res.status(500).json({ error: 'Failed to open print dialog' });
     }
 });
 

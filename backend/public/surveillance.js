@@ -54,11 +54,23 @@ socket.on('live_event', (event) => {
     imgElement.style.cursor = 'pointer';
     imgElement.title = "Click to open System Print Dialog";
     imgElement.addEventListener('click', () => {
-        fetch('/print-system', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: event.image })
-        }).catch(e => console.error("Failed to trigger print:", e));
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Print Photo</title>
+                    <style>
+                        @page { margin: 0; }
+                        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #fff; }
+                        img { max-width: 100%; max-height: 100vh; object-fit: contain; }
+                    </style>
+                </head>
+                <body>
+                    <img src="${event.image}" onload="window.print(); window.close();" />
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
     });
     
     liveFeed.prepend(item);
