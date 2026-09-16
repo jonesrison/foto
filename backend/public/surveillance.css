@@ -8,7 +8,8 @@ main { display: flex; gap: 40px; }
 h2 { margin-top: 0; color: #9E8BA6; }
 .feed-container { display: flex; flex-direction: column; gap: 15px; max-height: 70vh; overflow-y: auto; }
 .feed-item { background: #150B19; padding: 15px; border-radius: 8px; display: flex; gap: 15px; align-items: center; }
-.feed-item img { max-width: 100px; border-radius: 4px; }
+.feed-item img { max-width: 100px; border-radius: 4px; transition: transform 0.2s, filter 0.2s; }
+.feed-item img:hover { transform: scale(1.05); filter: brightness(1.2); }
 .feed-details { flex: 1; }
 .queue-list { list-style: none; padding: 0; margin: 0; }
 .queue-item { background: #150B19; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #5ECB9A; }

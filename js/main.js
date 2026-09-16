@@ -96,14 +96,15 @@ async function makePhoto() {
       $("#barFill").style.width = Math.round(p * 100) + "%";
     });
     Session.result = out;
-    $("#resultImg").src = out;
-    State.go("result");
+    
+    // Go straight to 'On its way' screen, bypassing the print button
+    State.go("printed");
+    setTimeout(() => { if (State.current === "printed") endSession(true); }, 5000);
   } catch (e) {
     log("pipeline failed: " + e.message);
     Stats.bump("fails");
     Session.result = src;
-    $("#resultImg").src = src;
-    State.go("result");
+    State.go("error", { reason: "Processing failed.", detail: e.message });
   }
 }
 

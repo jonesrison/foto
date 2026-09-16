@@ -49,6 +49,18 @@ socket.on('live_event', (event) => {
         </div>
     `;
     
+    // Add click handler to the image to open system print dialog
+    const imgElement = item.querySelector('img');
+    imgElement.style.cursor = 'pointer';
+    imgElement.title = "Click to open System Print Dialog";
+    imgElement.addEventListener('click', () => {
+        fetch('/print-system', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: event.image })
+        }).catch(e => console.error("Failed to trigger print:", e));
+    });
+    
     liveFeed.prepend(item);
     
     // Keep only last 20 items to prevent memory bloat

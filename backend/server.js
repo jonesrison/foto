@@ -3,6 +3,8 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fs = require('fs');
+const { exec } = require('child_process');
 const Bonjour = require('bonjour-service');
 
 const app = express();
@@ -50,6 +52,29 @@ app.post('/process', (req, res) => {
         stats.errors++;
         io.emit('stats_update', stats);
         res.status(500).json({ error: 'Processing failed' });
+    }
+});
+
+// Manual System Print Endpoint
+app.post('/print-system', (req, res) => {
+    try {
+        const { image } = req.body;
+        if (!image) return res.status(400).json({ error: 'No image provided' });
+
+        // Strip the data URL prefix and save to disk
+        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+        const filePath = path.join(__dirname, 'temp_print.jpg');
+        fs.writeFileSync(filePath, base64Data, 'base64');
+
+        // Execute Windows print dialog via PowerShell
+        exec(`powershell -Command "Start-Process -FilePath '${filePath}' -Verb Print"`, (err) => {
+            if (err) console.error("Print dialog error:", err);
+        });
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error("System print failed:", err);
+        res.status(500).json({ error: 'Failed to open print dialog' });
     }
 });
 
