@@ -9,7 +9,8 @@ export const DEFAULTS = {
   shots: 4,
   countdown: 3,
   keep: 1,
-  idleSeconds: 60
+  idleSeconds: 60,
+  backendIp: "127.0.0.1:3000"
 };
 
 export const Settings = {

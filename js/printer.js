@@ -1,8 +1,10 @@
 import { $, log, sleep } from "./utils.js";
-import { Stats } from "./settings.js";
+import { Stats, Settings } from "./settings.js";
 
 export const Printer = {
-  endpoint: "http://127.0.0.1:3000/print", // Update to Laptop 2 IP in production
+  get endpoint() {
+    return Settings.data.backendIp ? `http://${Settings.data.backendIp}/print` : null;
+  },
   queue: [],
   busy: false,
 

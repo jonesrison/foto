@@ -3,6 +3,7 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const Bonjour = require('bonjour-service');
 
 const app = express();
 const server = http.createServer(app);
@@ -12,6 +13,9 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use('/surveillance', express.static(path.join(__dirname, 'public')));
 
+const instance = new Bonjour();
+instance.publish({ name: 'Photobooth', type: 'http', port: 3000, host: 'photobooth.local' });
+
 let stats = { processed: 0, printed: 0, errors: 0 };
 let printQueue = [];
 
@@ -19,6 +23,11 @@ io.on('connection', (socket) => {
     console.log('Surveillance client connected');
     socket.emit('stats_update', stats);
     socket.emit('queue_update', printQueue);
+});
+
+// Discovery Endpoint
+app.get('/ping', (req, res) => {
+    res.json({ status: "ok", device: "photobooth-backend" });
 });
 
 // Pipeline Process Endpoint

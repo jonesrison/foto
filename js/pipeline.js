@@ -1,9 +1,11 @@
 import { log, OUT_W, OUT_H, sleep, loadImage } from "./utils.js";
-import { Stats } from "./settings.js";
+import { Stats, Settings } from "./settings.js";
 import { drawTemplate } from "./templates.js";
 
 export const Pipeline = {
-  endpoint: "http://127.0.0.1:3000/process", // Update to Laptop 2 IP in production
+  get endpoint() {
+    return Settings.data.backendIp ? `http://${Settings.data.backendIp}/process` : null;
+  },
   timeoutMs: 45000,
 
   async process(photoDataUrl, template, onProgress) {

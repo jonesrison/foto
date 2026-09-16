@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Connection Info - Photobooth</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body { display: flex; align-items: center; justify-content: center; background: var(--ink); }
+  .panel { background: var(--plum); padding: 3rem; border-radius: 12px; max-width: 600px; width: 90%; }
+  h2 { margin-bottom: 1rem; color: var(--paper); }
+  .form-group { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  label { font-weight: 600; font-size: 1.1rem; }
+  input[type="text"] { 
+    background: var(--ink); color: var(--paper); border: 1px solid rgba(247,242,232,.22);
+    border-radius: 7px; padding: 0.8em 1em; font-size: 1.1rem; 
+  }
+  .actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
+  #status { margin-top: 1.5rem; padding: 1rem; border-radius: 8px; font-weight: bold; background: var(--ink); }
+  .ok { color: var(--good); }
+  .err { color: var(--bad); }
+  .warn { color: var(--bulb); }
+</style>
+</head>
+<body>
+  <div class="panel">
+    <h2>Backend Connection</h2>
+    <p class="sub" style="margin-bottom: 2rem;">Configure the IP address of the laptop running the Photobooth backend server.</p>
+    
+    <div class="form-group">
+      <label for="ipInput">Backend IP : Port (or Hostname)</label>
+      <input type="text" id="ipInput" placeholder="e.g. 192.168.0.101:3000 or photobooth.local:3000">
+    </div>
+
+    <div class="actions">
+      <button class="btn go" id="saveBtn">Save & Test</button>
+      <button class="btn ghost" id="scanBtn">Auto Discover</button>
+      <button class="btn ghost" id="backBtn" style="margin-left: auto;">Back to Kiosk</button>
+    </div>
+
+    <div id="status">Status: Waiting...</div>
+  </div>
+
+  <script type="module" src="js/discovery.js"></script>
+</body>
+</html>
