@@ -3,7 +3,7 @@ import { Settings } from "./settings.js";
 
 async function testConnection(ip) {
     try {
-        const res = await fetch(`http://${ip}/ping`, { signal: AbortSignal.timeout(2000) });
+        const res = await fetch(`http://${ip}/ping`, { signal: AbortSignal.timeout(1000) });
         if (res.ok) {
             const data = await res.json();
             return data.device === "photobooth-backend";
@@ -56,18 +56,20 @@ async function backgroundScan() {
         addIp(`photobooth.local:${port}`);
     }
 
-    // Sweep subnets
+    // Sweep subnets in batches to prevent browser from blocking requests
     for (const subnet of subnets) {
-        const promises = [];
-        for (let i = 1; i <= 254; i++) {
-            const testIp = `${subnet}.${i}:${port}`;
-            promises.push(
-                testConnection(testIp).then(success => {
-                    if (success) addIp(testIp);
-                })
-            );
+        for (let batch = 1; batch <= 254; batch += 30) {
+            const promises = [];
+            for (let i = 0; i < 30 && batch + i <= 254; i++) {
+                const testIp = `${subnet}.${batch + i}:${port}`;
+                promises.push(
+                    testConnection(testIp).then(success => {
+                        if (success) addIp(testIp);
+                    })
+                );
+            }
+            await Promise.allSettled(promises);
         }
-        await Promise.allSettled(promises);
     }
     
     if (found === 0) {
