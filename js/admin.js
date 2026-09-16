@@ -45,6 +45,7 @@ export function paintStats() {
   $("#stAvg").textContent = s.procCount
     ? (s.procTotal / s.procCount / 1000).toFixed(1) + "s" : "\u2014";
 }
+Stats.onBump = paintStats;
 
 // Will be called from main.js bind
 export function bindAdminControls(applyMirrorFunc, bootFunc, goFullscreenFunc) {

@@ -1,5 +1,4 @@
 import { log } from "./utils.js";
-import { paintStats } from "./admin.js";
 
 export const DEFAULTS = {
   deviceId: "",
@@ -29,6 +28,7 @@ export const Settings = {
 
 export const Stats = {
   data: { sessions: 0, prints: 0, fails: 0, procTotal: 0, procCount: 0 },
+  onBump: null,
   load() {
     try {
       const raw = localStorage.getItem("booth.stats");
@@ -38,5 +38,9 @@ export const Stats = {
   save() {
     try { localStorage.setItem("booth.stats", JSON.stringify(this.data)); } catch (e) {}
   },
-  bump(k, n) { this.data[k] = (this.data[k] || 0) + (n === undefined ? 1 : n); this.save(); paintStats(); }
+  bump(k, n) { 
+    this.data[k] = (this.data[k] || 0) + (n === undefined ? 1 : n); 
+    this.save(); 
+    if (this.onBump) this.onBump();
+  }
 };

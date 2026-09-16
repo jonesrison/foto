@@ -33,50 +33,48 @@ async function saveAndTest() {
     }
 }
 
-async function scanNetwork() {
-    $("#status").className = "warn";
-    $("#status").textContent = "Scanning common local subnets... this may take a minute.";
-    $("#scanBtn").disabled = true;
-
-    // Common subnets to scan. We assume port 3000.
+async function backgroundScan() {
     const subnets = ["192.168.0", "192.168.1", "10.0.0"];
     const port = "3000";
-    let foundIp = null;
+    let found = 0;
 
-    // Try mDNS first as a quick check
-    if (await testConnection(`photobooth.local:${port}`)) {
-        foundIp = `photobooth.local:${port}`;
-    }
-
-    // Sweep subnets if mDNS fails
-    if (!foundIp) {
-        for (const subnet of subnets) {
-            if (foundIp) break;
-            const promises = [];
-            for (let i = 1; i <= 254; i++) {
-                const testIp = `${subnet}.${i}:${port}`;
-                promises.push(
-                    testConnection(testIp).then(success => {
-                        if (success) foundIp = testIp;
-                    })
-                );
-            }
-            // Wait for this subnet sweep to finish before trying the next
-            await Promise.allSettled(promises);
+    const addIp = (ip) => {
+        // Prevent adding duplicate IPs to datalist
+        const existing = Array.from($("#ipDatalist").options).some(opt => opt.value === ip);
+        if (!existing) {
+            const opt = document.createElement("option");
+            opt.value = ip;
+            $("#ipDatalist").appendChild(opt);
+            found++;
+            $("#status").textContent = `Scanning... Found ${found} backend(s). Click the textbox to see them!`;
         }
+    };
+
+    // Try mDNS
+    if (await testConnection(`photobooth.local:${port}`)) {
+        addIp(`photobooth.local:${port}`);
     }
 
-    $("#scanBtn").disabled = false;
-
-    if (foundIp) {
-        $("#ipInput").value = foundIp;
-        Settings.data.backendIp = foundIp;
-        Settings.save();
-        $("#status").className = "ok";
-        $("#status").textContent = `Found backend at ${foundIp}! Saved automatically.`;
+    // Sweep subnets
+    for (const subnet of subnets) {
+        const promises = [];
+        for (let i = 1; i <= 254; i++) {
+            const testIp = `${subnet}.${i}:${port}`;
+            promises.push(
+                testConnection(testIp).then(success => {
+                    if (success) addIp(testIp);
+                })
+            );
+        }
+        await Promise.allSettled(promises);
+    }
+    
+    if (found === 0) {
+        $("#status").textContent = "Scan complete. No backends found on the local network. Please enter IP manually.";
+        $("#status").className = "warn";
     } else {
-        $("#status").className = "err";
-        $("#status").textContent = "Could not automatically find the backend. Please enter the IP manually.";
+        $("#status").textContent = `Scan complete. Found ${found} backend(s).`;
+        $("#status").className = "ok";
     }
 }
 
@@ -85,10 +83,13 @@ function init() {
     $("#ipInput").value = Settings.data.backendIp || "photobooth.local:3000";
     
     $("#saveBtn").addEventListener("click", saveAndTest);
-    $("#scanBtn").addEventListener("click", scanNetwork);
     $("#backBtn").addEventListener("click", () => {
         window.location.href = "index.html";
     });
+
+    $("#status").className = "warn";
+    $("#status").textContent = "Scanning local network for backends in the background...";
+    backgroundScan();
 }
 
 init();
