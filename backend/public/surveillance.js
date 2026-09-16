@@ -5,6 +5,68 @@ const printQueueList = document.getElementById('print-queue');
 const statProcessed = document.getElementById('stat-processed');
 const statPrinted = document.getElementById('stat-printed');
 const statErrors = document.getElementById('stat-errors');
+const bulkPrintBtn = document.getElementById('bulk-print-btn');
+
+let selectedImages = new Set();
+
+function updateBulkPrintBtn() {
+    if (selectedImages.size > 0) {
+        bulkPrintBtn.textContent = `Print Selected (${selectedImages.size})`;
+        bulkPrintBtn.disabled = false;
+        bulkPrintBtn.style.background = '#FF6B35';
+        bulkPrintBtn.style.color = '#fff';
+        bulkPrintBtn.style.cursor = 'pointer';
+    } else {
+        bulkPrintBtn.textContent = `Print Selected (0)`;
+        bulkPrintBtn.disabled = true;
+        bulkPrintBtn.style.background = '#9E8BA6';
+        bulkPrintBtn.style.color = '#150B19';
+        bulkPrintBtn.style.cursor = 'not-allowed';
+    }
+}
+
+bulkPrintBtn.addEventListener('click', () => {
+    if (selectedImages.size === 0) return;
+    
+    const printWindow = window.open('', '_blank');
+    let imagesHtml = '';
+    selectedImages.forEach(img => {
+        imagesHtml += `<img src="${img}" />`;
+    });
+    
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Bulk Print Photo Strips</title>
+                <style>
+                    @page { margin: 0; size: auto; }
+                    body { margin: 0; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 10px; background: #fff; padding: 10px; }
+                    img { height: 95vh; max-height: 5.8in; object-fit: contain; border: 1px solid #eee; } 
+                </style>
+            </head>
+            <body>
+                ${imagesHtml}
+                <script>
+                    window.onload = () => {
+                        setTimeout(() => {
+                            window.print();
+                            window.close();
+                        }, 500);
+                    };
+                </script>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+    
+    // Clear selection
+    selectedImages.clear();
+    document.querySelectorAll('.feed-item img').forEach(img => {
+        img.style.border = 'none';
+        img.style.opacity = '1';
+    });
+    updateBulkPrintBtn();
+});
 
 // Update stats
 socket.on('stats_update', (stats) => {
@@ -38,45 +100,33 @@ socket.on('live_event', (event) => {
     const time = new Date().toLocaleTimeString();
 
     item.innerHTML = `
-        <img src="${event.image}" alt="Preview">
+        <img src="${event.image}" alt="Preview" style="box-sizing: border-box; transition: all 0.2s;">
         <div class="feed-details">
             <span class="badge ${badgeClass}">${badgeText}</span>
             <span style="color: #9E8BA6; font-size: 0.9rem; margin-left: 10px;">${time}</span>
-            <p style="margin: 10px 0 0 0; font-size: 0.9rem;">
-                ${event.template ? `Template: ${event.template}` : ''}
-                ${event.meta && event.meta.template ? `Template ID: ${event.meta.template}` : ''}
-            </p>
+            <p style="margin: 10px 0 0 0; font-size: 0.9rem;">Click to select for printing</p>
         </div>
     `;
     
-    // Add click handler to the image to open system print dialog
     const imgElement = item.querySelector('img');
     imgElement.style.cursor = 'pointer';
-    imgElement.title = "Click to open System Print Dialog";
+    
     imgElement.addEventListener('click', () => {
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <html>
-                <head>
-                    <title>Print Photo</title>
-                    <style>
-                        @page { margin: 0; }
-                        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #fff; }
-                        img { max-width: 100%; max-height: 100vh; object-fit: contain; }
-                    </style>
-                </head>
-                <body>
-                    <img src="${event.image}" onload="window.print(); window.close();" />
-                </body>
-            </html>
-        `);
-        printWindow.document.close();
+        if (selectedImages.has(event.image)) {
+            selectedImages.delete(event.image);
+            imgElement.style.border = 'none';
+            imgElement.style.opacity = '1';
+        } else {
+            selectedImages.add(event.image);
+            imgElement.style.border = '4px solid #5ECB9A';
+            imgElement.style.opacity = '0.7';
+        }
+        updateBulkPrintBtn();
     });
     
     liveFeed.prepend(item);
     
-    // Keep only last 20 items to prevent memory bloat
-    if (liveFeed.children.length > 20) {
+    if (liveFeed.children.length > 50) {
         liveFeed.removeChild(liveFeed.lastChild);
     }
 });

@@ -91,6 +91,17 @@ function init() {
     opt.textContent = `${defaultIp} (Current)`;
     $("#ipInput").appendChild(opt);
     
+    // Add localhost defaults for local testing
+    const local1 = document.createElement("option");
+    local1.value = "localhost:3000";
+    local1.textContent = "localhost:3000 (Local)";
+    $("#ipInput").appendChild(local1);
+
+    const local2 = document.createElement("option");
+    local2.value = "127.0.0.1:3000";
+    local2.textContent = "127.0.0.1:3000 (Local)";
+    $("#ipInput").appendChild(local2);
+    
     $("#saveBtn").addEventListener("click", saveAndTest);
     $("#backBtn").addEventListener("click", () => {
         window.location.href = "index.html";

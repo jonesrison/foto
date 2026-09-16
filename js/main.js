@@ -91,7 +91,7 @@ async function makePhoto() {
   $("#procSub").textContent = "Hang tight, this takes a few seconds.";
 
   try {
-    const out = await Pipeline.process(Session.shots, p => {
+    const out = await Pipeline.process(Session.shots, Session.template, p => {
       $("#barFill").style.width = Math.round(p * 100) + "%";
     });
     Session.result = out;
@@ -149,7 +149,9 @@ async function runShoot() {
   }
 
   paintPips(-1);
-  makePhoto();
+  buildTemplateThumbs();
+  $("#makeBtn").disabled = true;
+  State.go("templates");
 }
 
 function bind() {
@@ -167,6 +169,9 @@ function bind() {
 
   $("#retakeBtn").addEventListener("click", runShoot);
   $("#redoBtn").addEventListener("click", runShoot);
+  
+  $("#makeBtn").addEventListener("click", makePhoto);
+  $("#backToPhotos").addEventListener("click", runShoot);
 
   $("#printBtn").addEventListener("click", () => {
     State.go("printed");

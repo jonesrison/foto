@@ -1,16 +1,17 @@
 import { log, sleep, loadImage } from "./utils.js";
 import { Stats, Settings } from "./settings.js";
+import { drawTemplate } from "./templates.js";
 
 export const Pipeline = {
   get endpoint() {
     return Settings.data.backendIp ? `http://${Settings.data.backendIp}/process` : null;
   },
 
-  async process(shots, onProgress) {
+  async process(shots, template, onProgress) {
     const t0 = performance.now();
     
     // Stitch locally first
-    const stripDataUrl = await this.stitchStrip(shots, onProgress);
+    const stripDataUrl = await this.stitchStrip(shots, template, onProgress);
     
     // Send to backend if configured
     if (this.endpoint) {
@@ -27,7 +28,7 @@ export const Pipeline = {
     return stripDataUrl;
   },
 
-  async stitchStrip(shots, onProgress) {
+  async stitchStrip(shots, template, onProgress) {
     onProgress(0.1);
     
     // Canvas dimensions for a standard vertical strip
@@ -36,11 +37,15 @@ export const Pipeline = {
     canvas.height = 1800;
     const ctx = canvas.getContext("2d");
     
-    // Fill white background
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Draw the selected retro template background
+    if (template) {
+        drawTemplate(ctx, template, canvas.width, canvas.height);
+    } else {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
     
-    // Apply nostalgic filter
+    // Apply nostalgic filter for the photos
     ctx.filter = "sepia(40%) contrast(120%) brightness(110%) hue-rotate(-10deg)";
     
     const pad = 40; // padding around/between images
