@@ -87,23 +87,21 @@ function buildPhotoGrid() {
 async function makePhoto() {
   State.go("processing");
   $("#barFill").style.width = "0%";
-  $("#procTitle").textContent = "Making your photo";
+  $("#procTitle").textContent = "Making your photo strip";
   $("#procSub").textContent = "Hang tight, this takes a few seconds.";
 
-  const src = Session.shots[Session.chosen[0]];
   try {
-    const out = await Pipeline.process(src, Session.template, p => {
+    const out = await Pipeline.process(Session.shots, p => {
       $("#barFill").style.width = Math.round(p * 100) + "%";
     });
     Session.result = out;
     
-    // Go straight to 'On its way' screen, bypassing the print button
-    State.go("printed");
-    setTimeout(() => { if (State.current === "printed") endSession(true); }, 5000);
+    // Show the result screen with the final strip
+    $("#resultImg").src = out;
+    State.go("result");
   } catch (e) {
     log("pipeline failed: " + e.message);
     Stats.bump("fails");
-    Session.result = src;
     State.go("error", { reason: "Processing failed.", detail: e.message });
   }
 }
@@ -151,8 +149,7 @@ async function runShoot() {
   }
 
   paintPips(-1);
-  buildPhotoGrid();
-  State.go("choose");
+  makePhoto();
 }
 
 function bind() {
@@ -169,15 +166,11 @@ function bind() {
   });
 
   $("#retakeBtn").addEventListener("click", runShoot);
-  $("#toTplBtn").addEventListener("click", () => State.go("templates"));
-  $("#backToPhotos").addEventListener("click", () => State.go("choose"));
-  $("#makeBtn").addEventListener("click", makePhoto);
-  $("#redoBtn").addEventListener("click", () => State.go("templates"));
+  $("#redoBtn").addEventListener("click", runShoot);
 
   $("#printBtn").addEventListener("click", () => {
-    Printer.enqueue(Session.result, { template: Session.template && Session.template.id, at: Date.now() });
     State.go("printed");
-    setTimeout(() => { if (State.current === "printed") endSession(true); }, 8000);
+    setTimeout(() => { if (State.current === "printed") endSession(true); }, 5000);
   });
   $("#doneBtn").addEventListener("click", () => endSession(true));
 

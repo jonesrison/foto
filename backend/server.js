@@ -40,27 +40,33 @@ app.get('/ping', (req, res) => {
 // Pipeline Process Endpoint
 app.post('/process', (req, res) => {
     try {
-        const { image, template } = req.body;
-        // In a real app, perform heavy processing here (e.g., using sharp or calling a python script). 
-        // For now, just return the image to simulate a successful processing step.
-        const processedImage = image; 
+        const { image, originals } = req.body;
+        const timestamp = Date.now();
         
-        // Save image to disk
-        if (processedImage) {
-            const base64Data = processedImage.replace(/^data:image\/\w+;base64,/, "");
-            const filename = `photo_${Date.now()}.jpg`;
-            const filepath = path.join(photosDir, filename);
-            fs.writeFileSync(filepath, base64Data, 'base64');
+        // Save the main photo strip
+        if (image) {
+            const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+            const filename = `photo_strip_${timestamp}.jpg`;
+            fs.writeFileSync(path.join(photosDir, filename), base64Data, 'base64');
+        }
+
+        // Save the individual original shots
+        if (originals && Array.isArray(originals)) {
+            originals.forEach((orig, index) => {
+                const bData = orig.replace(/^data:image\/\w+;base64,/, "");
+                const fname = `photo_${timestamp}_orig_${index + 1}.jpg`;
+                fs.writeFileSync(path.join(photosDir, fname), bData, 'base64');
+            });
         }
         
         stats.processed++;
         io.emit('stats_update', stats);
-        io.emit('live_event', { type: 'process', image: processedImage, template });
+        io.emit('live_event', { type: 'process', image: image });
         
-        // Simulate processing time
+        // Return success
         setTimeout(() => {
-            res.json({ image: processedImage });
-        }, 1000);
+            res.json({ success: true });
+        }, 500);
     } catch (err) {
         stats.errors++;
         io.emit('stats_update', stats);

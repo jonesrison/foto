@@ -71,7 +71,7 @@ export const Camera = {
     const vw = video.videoWidth, vh = video.videoHeight;
     if (!vw || !vh) throw new Error("No video frame available");
 
-    const targetRatio = 2 / 3;
+    const targetRatio = 3 / 2; // Landscape
     let sw = vw, sh = vh;
     if (vw / vh > targetRatio) sw = Math.round(vh * targetRatio);
     else sh = Math.round(vw / targetRatio);
@@ -79,11 +79,14 @@ export const Camera = {
     const sy = Math.round((vh - sh) / 2);
 
     const c = document.createElement("canvas");
-    c.width = OUT_W; c.height = OUT_H;
+    // Swap OUT_W and OUT_H because original dimensions were portrait, but we want landscape
+    const w = Math.max(OUT_W, OUT_H);
+    const h = Math.min(OUT_W, OUT_H);
+    c.width = w; c.height = h;
     const ctx = c.getContext("2d");
     ctx.imageSmoothingQuality = "high";
-    if (Settings.data.mirrorSave) { ctx.translate(OUT_W, 0); ctx.scale(-1, 1); }
-    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, OUT_W, OUT_H);
+    if (Settings.data.mirrorSave) { ctx.translate(w, 0); ctx.scale(-1, 1); }
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
     return c.toDataURL("image/jpeg", 0.94);
   }
 };

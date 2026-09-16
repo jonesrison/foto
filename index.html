@@ -73,13 +73,20 @@
   <!-- result -->
   <div class="layer" id="result">
     <div class="panel">
-      <img id="resultImg" alt="Your finished photo">
-      <div class="row">
-        <button class="btn ghost" id="redoBtn">Try another scene</button>
-        <button class="btn go" id="printBtn">Print it</button>
+      <img id="resultImg" alt="Your finished photo strip" style="animation: fadeUp 0.8s ease-out; max-height: 60vh;">
+      <div class="row" style="margin-top: 2rem;">
+        <button class="btn ghost" id="redoBtn">Shoot again</button>
+        <button class="btn go" id="printBtn">Looks good!</button>
       </div>
     </div>
   </div>
+  
+  <style>
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 
   <!-- printed -->
   <div class="layer" id="printed">

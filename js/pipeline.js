@@ -1,74 +1,85 @@
-import { log, OUT_W, OUT_H, sleep, loadImage } from "./utils.js";
+import { log, sleep, loadImage } from "./utils.js";
 import { Stats, Settings } from "./settings.js";
-import { drawTemplate } from "./templates.js";
 
 export const Pipeline = {
   get endpoint() {
     return Settings.data.backendIp ? `http://${Settings.data.backendIp}/process` : null;
   },
-  timeoutMs: 45000,
 
-  async process(photoDataUrl, template, onProgress) {
+  async process(shots, onProgress) {
     const t0 = performance.now();
-    let out;
+    
+    // Stitch locally first
+    const stripDataUrl = await this.stitchStrip(shots, onProgress);
+    
+    // Send to backend if configured
     if (this.endpoint) {
-      out = await this._remote(photoDataUrl, template, onProgress);
-    } else {
-      out = await this._local(photoDataUrl, template, onProgress);
+      try {
+        await this._sendToBackend(stripDataUrl, shots);
+      } catch(e) {
+        log("Backend save failed: " + e.message);
+      }
     }
+    
     const ms = performance.now() - t0;
     Stats.bump("procTotal", ms); Stats.bump("procCount");
     log("processed in " + Math.round(ms) + "ms");
-    return out;
+    return stripDataUrl;
   },
 
-  async _remote(photoDataUrl, template, onProgress) {
+  async stitchStrip(shots, onProgress) {
+    onProgress(0.1);
+    
+    // Canvas dimensions for a standard vertical strip
+    const canvas = document.createElement("canvas");
+    canvas.width = 600; 
+    canvas.height = 1800;
+    const ctx = canvas.getContext("2d");
+    
+    // Fill white background
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Apply nostalgic filter
+    ctx.filter = "sepia(40%) contrast(120%) brightness(110%) hue-rotate(-10deg)";
+    
+    const pad = 40; // padding around/between images
+    const imgW = canvas.width - (pad * 2);
+    const imgH = imgW * (2/3); // 3:2 landscape height
+    
+    for (let i = 0; i < shots.length; i++) {
+        const img = await loadImage(shots[i]);
+        const y = pad + (i * (imgH + pad));
+        ctx.drawImage(img, pad, y, imgW, imgH);
+        
+        onProgress(0.1 + ((i+1)/shots.length) * 0.8);
+    }
+    
+    // Reset filter and add classic branding text at bottom
+    ctx.filter = "none";
+    ctx.fillStyle = "#000000";
+    ctx.font = "bold 32px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("PHOTOBOOTH", canvas.width / 2, canvas.height - 40);
+    
+    onProgress(1.0);
+    return canvas.toDataURL("image/jpeg", 0.95);
+  },
+
+  async _sendToBackend(strip, originals) {
     const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), this.timeoutMs);
+    const timer = setTimeout(() => ctl.abort(), 10000);
     try {
-      onProgress(0.15);
       const res = await fetch(this.endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: photoDataUrl, template: template.id }),
+        body: JSON.stringify({ image: strip, originals: originals }),
         signal: ctl.signal
       });
       if (!res.ok) throw new Error("Server returned " + res.status);
-      onProgress(0.85);
-      const data = await res.json();
-      if (!data.image) throw new Error("Response had no image");
-      onProgress(1);
-      return data.image;
-    } finally { clearTimeout(timer); }
-  },
-
-  async _local(photoDataUrl, template, onProgress) {
-    onProgress(0.2);
-    const img = await loadImage(photoDataUrl);
-    onProgress(0.5);
-    const c = document.createElement("canvas");
-    c.width = OUT_W; c.height = OUT_H;
-    const ctx = c.getContext("2d");
-    drawTemplate(ctx, template, OUT_W, OUT_H);
-
-    const pad = 70, capH = 150;
-    const iw = OUT_W - pad * 2, ih = OUT_H - pad * 2 - capH;
-    const ratio = Math.max(iw / img.width, ih / img.height);
-    const dw = img.width * ratio, dh = img.height * ratio;
-    ctx.save();
-    ctx.beginPath(); ctx.rect(pad, pad, iw, ih); ctx.clip();
-    ctx.drawImage(img, pad + (iw - dw) / 2, pad + (ih - dh) / 2, dw, dh);
-    ctx.restore();
-    ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.lineWidth = 6;
-    ctx.strokeRect(pad, pad, iw, ih);
-
-    ctx.fillStyle = "rgba(255,255,255,.94)";
-    ctx.font = "600 52px system-ui, sans-serif";
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(template.name, OUT_W / 2, OUT_H - pad - capH / 2 + 10);
-
-    await sleep(900);
-    onProgress(1);
-    return c.toDataURL("image/jpeg", 0.95);
+      return await res.json();
+    } finally {
+      clearTimeout(timer);
+    }
   }
 };
