@@ -1,0 +1,17 @@
+body { font-family: system-ui, sans-serif; background: #150B19; color: #F7F2E8; margin: 0; padding: 20px; }
+header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3A2142; padding-bottom: 20px; margin-bottom: 20px; }
+h1 { margin: 0; color: #F2B13C; }
+.stats { display: flex; gap: 20px; }
+.stat-box { background: #2A1730; padding: 10px 20px; border-radius: 8px; font-weight: bold; }
+main { display: flex; gap: 40px; }
+.column { flex: 1; background: #2A1730; padding: 20px; border-radius: 12px; }
+h2 { margin-top: 0; color: #9E8BA6; }
+.feed-container { display: flex; flex-direction: column; gap: 15px; max-height: 70vh; overflow-y: auto; }
+.feed-item { background: #150B19; padding: 15px; border-radius: 8px; display: flex; gap: 15px; align-items: center; }
+.feed-item img { max-width: 100px; border-radius: 4px; }
+.feed-details { flex: 1; }
+.queue-list { list-style: none; padding: 0; margin: 0; }
+.queue-item { background: #150B19; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #5ECB9A; }
+.badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+.badge.process { background: #3A2142; color: #F2B13C; }
+.badge.print { background: #5ECB9A; color: #150B19; }

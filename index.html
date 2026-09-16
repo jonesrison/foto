@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Photobooth</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="stage">
+  <div id="feedWrap">
+    <video id="feed" autoplay playsinline muted></video>
+    <div id="vignette"></div>
+    <div id="guide"><div id="guideBox"></div></div>
+  </div>
+
+  <!-- boot -->
+  <div class="layer on" id="boot">
+    <div class="spin"></div>
+    <h2>Starting the camera</h2>
+  </div>
+
+  <!-- attract -->
+  <div class="layer" id="attract">
+    <div id="bulb"></div>
+    <h1>Step in and take a photo</h1>
+    <p class="sub" id="attractSub">Four shots, pick your favourite, choose a scene. Printed in about a minute.</p>
+    <button class="btn" id="startBtn">Tap to start</button>
+    <div id="attractFoot"></div>
+  </div>
+
+  <!-- countdown -->
+  <div class="layer" id="countdown">
+    <div id="shotPips"></div>
+    <div id="count">3</div>
+    <div id="countHint">Get ready</div>
+  </div>
+
+  <!-- choose photo -->
+  <div class="layer" id="choose">
+    <div class="panel">
+      <h2 id="chooseTitle">Pick your favourite</h2>
+      <div class="grid" id="photoGrid"></div>
+      <div class="count-note" id="chooseNote"></div>
+      <div class="row">
+        <button class="btn ghost" id="retakeBtn">Shoot again</button>
+        <button class="btn go" id="toTplBtn" disabled>Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- choose template -->
+  <div class="layer" id="templates">
+    <div class="panel">
+      <h2>Choose a scene</h2>
+      <div class="grid" id="tplGrid"></div>
+      <div class="row">
+        <button class="btn ghost" id="backToPhotos">Back</button>
+        <button class="btn go" id="makeBtn" disabled>Make my photo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- processing -->
+  <div class="layer" id="processing">
+    <div class="spin"></div>
+    <h2 id="procTitle">Making your photo</h2>
+    <p class="sub" id="procSub">Hang tight, this takes a few seconds.</p>
+    <div id="bar"><div id="barFill"></div></div>
+  </div>
+
+  <!-- result -->
+  <div class="layer" id="result">
+    <div class="panel">
+      <img id="resultImg" alt="Your finished photo">
+      <div class="row">
+        <button class="btn ghost" id="redoBtn">Try another scene</button>
+        <button class="btn go" id="printBtn">Print it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- printed -->
+  <div class="layer" id="printed">
+    <div id="tick">&#10003;</div>
+    <h1>On its way</h1>
+    <p class="sub" id="printedSub">Collect your print from the tray. Thanks for stopping by.</p>
+    <button class="btn ghost" id="doneBtn" style="margin-top:4vmin">Done</button>
+  </div>
+
+  <!-- error -->
+  <div class="layer" id="error">
+    <div id="errIcon">!</div>
+    <h2 id="errTitle">The camera isn't connected</h2>
+    <p class="sub" id="errMsg">Check the phone is plugged in and the webcam app is running, then try again.</p>
+    <div class="row" style="margin-top:4vmin">
+      <button class="btn go" id="retryBtn">Try again</button>
+      <button class="btn ghost" id="errAdminBtn">Settings</button>
+    </div>
+    <div id="errDetail"></div>
+  </div>
+
+  <div id="strip"></div>
+  <div id="nudge">Still there? Tap anywhere to keep going.</div>
+  <div id="flash"></div>
+</div>
+
+<div id="queueBadge"></div>
+<div id="corner" title="Hold to open settings"></div>
+
+<!-- admin -->
+<div id="admin">
+  <div id="adminCard">
+    <h2>Booth settings</h2>
+    <p class="sub">Operator only. Guests never see this. Press Escape to close.</p>
+
+    <div class="fieldset">
+      <div class="field">
+        <label>Camera<span class="hint">Pick the phone's virtual webcam, not the laptop's built-in one.</span></label>
+        <select id="camSel"></select>
+      </div>
+      <div class="field">
+        <label>Mirror the preview<span class="hint">On feels natural to guests. Off if there's readable text behind them.</span></label>
+        <input type="checkbox" id="mirrorChk">
+      </div>
+      <div class="field">
+        <label>Save photos mirrored<span class="hint">On means the print matches what the guest saw on screen.</span></label>
+        <input type="checkbox" id="mirrorSaveChk">
+      </div>
+      <div class="field">
+        <label>Show the print-safe guide<span class="hint">Dashed 2:3 box during framing. Turn off before the event.</span></label>
+        <input type="checkbox" id="guideChk">
+      </div>
+    </div>
+
+    <div class="fieldset">
+      <div class="field">
+        <label>Shots per session<span class="hint">More shots means better odds of a good one, but a longer queue.</span></label>
+        <input type="number" id="shotsInp" min="1" max="6" step="1">
+      </div>
+      <div class="field">
+        <label>Countdown seconds</label>
+        <input type="number" id="cdInp" min="1" max="10" step="1">
+      </div>
+      <div class="field">
+        <label>Photos a guest may keep</label>
+        <input type="number" id="keepInp" min="1" max="6" step="1">
+      </div>
+      <div class="field">
+        <label>Return to start after (seconds idle)</label>
+        <input type="number" id="idleInp" min="15" max="300" step="5">
+      </div>
+    </div>
+
+    <div class="fieldset">
+      <div class="field">
+        <label>Session counter<span class="hint">Prints sent this event.</span></label>
+        <div class="stats">
+          <div class="stat"><b id="stSessions">0</b><span>sessions</span></div>
+          <div class="stat"><b id="stPrints">0</b><span>prints</span></div>
+          <div class="stat"><b id="stFails">0</b><span>failures</span></div>
+          <div class="stat"><b id="stAvg">—</b><span>avg process</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="adminBtns">
+      <button class="btn go" id="closeAdmin">Close</button>
+      <button class="btn ghost" id="testShot">Test capture</button>
+      <button class="btn ghost" id="testPrint">Test print</button>
+      <button class="btn ghost" id="reloadCams">Rescan cameras</button>
+      <button class="btn ghost" id="resetStats">Reset counters</button>
+      <button class="btn ghost" id="fsBtn">Fullscreen</button>
+    </div>
+    <div id="adminLog"></div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

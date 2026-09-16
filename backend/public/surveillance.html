@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiosk Surveillance</title>
+    <link rel="stylesheet" href="surveillance.css">
+</head>
+<body>
+    <header>
+        <h1>Photobooth Backend Surveillance</h1>
+        <div class="stats">
+            <div class="stat-box">Processed: <span id="stat-processed">0</span></div>
+            <div class="stat-box">Printed: <span id="stat-printed">0</span></div>
+            <div class="stat-box">Errors: <span id="stat-errors">0</span></div>
+        </div>
+    </header>
+    <main>
+        <div class="column">
+            <h2>Live Activity</h2>
+            <div id="live-feed" class="feed-container"></div>
+        </div>
+        <div class="column">
+            <h2>Print Queue</h2>
+            <ul id="print-queue" class="queue-list"></ul>
+        </div>
+    </main>
+    
+    <!-- Include Socket.io client -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="surveillance.js"></script>
+</body>
+</html>
