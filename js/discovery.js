@@ -39,14 +39,15 @@ async function backgroundScan() {
     let found = 0;
 
     const addIp = (ip) => {
-        // Prevent adding duplicate IPs to datalist
-        const existing = Array.from($("#ipDatalist").options).some(opt => opt.value === ip);
+        // Prevent adding duplicate IPs to select
+        const existing = Array.from($("#ipInput").options).some(opt => opt.value === ip);
         if (!existing) {
             const opt = document.createElement("option");
             opt.value = ip;
-            $("#ipDatalist").appendChild(opt);
+            opt.textContent = ip;
+            $("#ipInput").appendChild(opt);
             found++;
-            $("#status").textContent = `Scanning... Found ${found} backend(s). Click the textbox to see them!`;
+            $("#status").textContent = `Scanning... Found ${found} backend(s). Choose from the dropdown!`;
         }
     };
 
@@ -80,7 +81,13 @@ async function backgroundScan() {
 
 function init() {
     Settings.load();
-    $("#ipInput").value = Settings.data.backendIp || "photobooth.local:3000";
+    
+    // Add the currently saved IP as the default first option
+    const defaultIp = Settings.data.backendIp || "photobooth.local:3000";
+    const opt = document.createElement("option");
+    opt.value = defaultIp;
+    opt.textContent = `${defaultIp} (Current)`;
+    $("#ipInput").appendChild(opt);
     
     $("#saveBtn").addEventListener("click", saveAndTest);
     $("#backBtn").addEventListener("click", () => {
