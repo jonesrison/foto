@@ -12,22 +12,6 @@ export function drawTemplate(ctx, t, w, h) {
   if (t.type === "solid") {
     ctx.fillStyle = t.color;
     ctx.fillRect(0, 0, w, h);
-    
-    if (t.id === "white") {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.04)";
-      ctx.font = "40px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      const icons = ["📸", "✨", "🎞️", "🎈"];
-      let iconIdx = 0;
-      for (let y = 30; y < h; y += 80) {
-        for (let x = 40; x < w; x += 100) {
-          const xOffset = (Math.floor(y / 80) % 2 === 0) ? 0 : 50;
-          ctx.fillText(icons[iconIdx % icons.length], x + xOffset, y);
-          iconIdx++;
-        }
-      }
-    }
   } else if (t.type === "checkered") {
     ctx.fillStyle = t.color1;
     ctx.fillRect(0, 0, w, h);
@@ -52,6 +36,28 @@ export function drawTemplate(ctx, t, w, h) {
         ctx.arc(x + xOffset, y, spacing/5, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
+  }
+  
+  // Add 90s retro icons overlay to ALL templates
+  ctx.fillStyle = "rgba(0, 0, 0, 0.06)";
+  if (t.type !== "solid" || t.id !== "white") {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.15)"; // lighter icons for darker/colored backgrounds
+  }
+  ctx.font = "35px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const retroIcons = ["👾", "📼", "💾", "🕹️", "⚡", "💥", "🛹", "🎸"];
+  let iconIdx = 0;
+  for (let y = 30; y < h; y += 120) {
+    for (let x = 40; x < w; x += 120) {
+      const xOffset = (Math.floor(y / 120) % 2 === 0) ? 0 : 60;
+      ctx.save();
+      ctx.translate(x + xOffset, y);
+      ctx.rotate((Math.random() - 0.5) * 0.4); // slight random rotation for extra retro feel
+      ctx.fillText(retroIcons[iconIdx % retroIcons.length], 0, 0);
+      ctx.restore();
+      iconIdx++;
     }
   }
 }

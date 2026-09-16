@@ -31,7 +31,11 @@ bulkPrintBtn.addEventListener('click', () => {
     const printWindow = window.open('', '_blank');
     let imagesHtml = '';
     selectedImages.forEach(img => {
-        imagesHtml += `<img src="${img}" />`;
+        imagesHtml += `
+            <div class="img-container">
+                <img src="${img}" />
+            </div>
+        `;
     });
     
     printWindow.document.write(`
@@ -40,8 +44,31 @@ bulkPrintBtn.addEventListener('click', () => {
                 <title>Bulk Print Photo Strips</title>
                 <style>
                     @page { margin: 0; size: auto; }
-                    body { margin: 0; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 10px; background: #fff; padding: 10px; }
-                    img { height: 95vh; max-height: 5.8in; object-fit: contain; border: 1px solid #eee; } 
+                    body { 
+                        margin: 0; 
+                        display: flex; 
+                        flex-direction: column; /* Stack vertically */
+                        align-items: flex-start; /* Stack from the left */
+                        gap: 20px; 
+                        background: #fff; 
+                        padding: 20px; 
+                    }
+                    .img-container {
+                        width: 95vw;
+                        max-width: 5.8in;
+                        height: 31.6vw; /* 1/3 of the width since strip is 1:3 */
+                        max-height: 1.93in;
+                        position: relative;
+                    }
+                    .img-container img {
+                        position: absolute;
+                        height: 95vw;
+                        max-height: 5.8in;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%) rotate(-90deg); /* Rotate 90 degrees */
+                        border: 1px solid #eee; 
+                    }
                 </style>
             </head>
             <body>
