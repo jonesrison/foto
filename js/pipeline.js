@@ -65,7 +65,7 @@ export const Pipeline = {
     ctx.fillStyle = "#000000";
     ctx.font = "bold 32px system-ui, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("PHOTOBOOTH", canvas.width / 2, canvas.height - 40);
+    ctx.fillText("RETRO BOOTH", canvas.width / 2, canvas.height - 40);
     
     onProgress(1.0);
     return canvas.toDataURL("image/jpeg", 0.95);
